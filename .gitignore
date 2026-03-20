@@ -1,3 +1,4 @@
 /target
 .fastembed_cache/
 .sugar/
+.DS_Store
