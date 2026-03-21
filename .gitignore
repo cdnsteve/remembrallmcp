@@ -2,3 +2,4 @@
 .fastembed_cache/
 .sugar/
 .DS_Store
+dist/
