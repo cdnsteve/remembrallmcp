@@ -156,11 +156,10 @@ engram-test-harness (Rust binary)
 
 **Regression detection:** Store previous scores. Any dimension dropping >5 points = warning. Any language below C = blocks merge.
 
-## Implementation Order
+## Implementation Status
 
-1. Clone + pin the 8 small test projects (git submodules)
-2. Build the test harness binary (TOML loader + diff engine + scorer)
-3. Create ground truth for Python (Click) and Rust (bat) first
-4. Run, score, fix parser bugs
-5. Expand to remaining 6 small projects
-6. Add medium projects for cross-file stress testing
+- Test harness binary: built (`engram-test-harness` crate - TOML loader, diff engine, scorer, report printer)
+- Ground truth fixtures: `test-fixtures/` directory contains TOML files for all 8 small projects
+- Run: `cargo run -p engram-test-harness -- --project /path/to/project --ground-truth test-fixtures/<language>.toml`
+- Scores for all 8 small projects are reflected in the README quality table
+- Medium projects (Rich, NestJS, Webpack, etc.) not yet pinned as submodules
