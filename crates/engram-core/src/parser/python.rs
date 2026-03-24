@@ -97,6 +97,7 @@ pub fn parse_python_file(
         project: project.to_string(),
         signature: None,
         file_mtime,
+        layer: None,
     });
 
     // First pass: collect imports so we can score call confidence later.
@@ -480,6 +481,7 @@ fn process_function(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     // DEFINES: parent (file or class) defines this function/method.
@@ -520,6 +522,7 @@ fn process_class(
         project: ctx.project.to_string(),
         signature: Some(format!("class {name}")),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     // DEFINES: file (or outer class) defines this class.

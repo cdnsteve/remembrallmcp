@@ -76,6 +76,7 @@ pub fn parse_java_file(
         project: project.to_string(),
         signature: None,
         file_mtime,
+        layer: None,
     });
 
     // First pass: collect import declarations.
@@ -271,6 +272,7 @@ fn process_type_decl(
         project: ctx.project.to_string(),
         signature: Some(build_type_signature(node, &name, source)),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     // DEFINES: parent scope (file or outer class) defines this type.
@@ -394,6 +396,7 @@ fn process_method(
         project: ctx.project.to_string(),
         signature: Some(build_method_signature(node, &name, source)),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     // DEFINES: class defines this method.

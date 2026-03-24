@@ -94,6 +94,7 @@ pub fn parse_ts_file(
         project: project.to_string(),
         signature: None,
         file_mtime,
+        layer: None,
     });
 
     // First pass: collect imports.
@@ -334,6 +335,7 @@ fn collect_definitions<'a>(
                             project: ctx.project.to_string(),
                             signature: Some(signature),
                             file_mtime: ctx.file_mtime,
+                            layer: None,
                         });
                         ctx.result.relationships.push(Relationship {
                             source_id: parent_id,
@@ -469,6 +471,7 @@ fn process_function_declaration(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -516,6 +519,7 @@ fn process_method_definition(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -555,6 +559,7 @@ fn process_class_declaration(
         project: ctx.project.to_string(),
         signature: Some(format!("class {name}")),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -721,6 +726,7 @@ fn process_interface_declaration(
         project: ctx.project.to_string(),
         signature: Some(format!("interface {name}")),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -761,6 +767,7 @@ fn process_type_alias_declaration(
         project: ctx.project.to_string(),
         signature: Some(format!("type {name}")),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -821,6 +828,7 @@ fn process_arrow_function_or_fn_expr(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {

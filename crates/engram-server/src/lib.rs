@@ -22,7 +22,7 @@ use engram_core::{
     embed::{Embedder, FastEmbedder},
     graph::{
         store::GraphStore,
-        types::{Direction, SymbolType},
+        types::{Direction, SymbolType, TourStop},
     },
     memory::{
         store::MemoryStore,
@@ -122,6 +122,14 @@ pub struct IngestDocsParams {
     pub path: String,
     #[schemars(description = "Project name to tag memories with")]
     pub project: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct TourParams {
+    #[schemars(description = "Project name (must have been indexed first with engram_index)")]
+    pub project: String,
+    #[schemars(description = "Maximum number of stops in the tour (default 20)")]
+    pub limit: Option<usize>,
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
@@ -328,6 +336,7 @@ impl EngramServer {
                     "name": r.symbol.name,
                     "type": r.symbol.symbol_type.to_string(),
                     "file": r.symbol.file_path,
+                    "layer": r.symbol.layer,
                     "depth": r.depth,
                     "relationship": r.relationship.to_string(),
                     "confidence": r.confidence,
@@ -335,16 +344,40 @@ impl EngramServer {
             })
             .collect();
 
-        let text = json!({
+        // Collect distinct layers across the origin symbol and all affected symbols.
+        let mut layers_set: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        if let Some(ref l) = symbol.layer {
+            layers_set.insert(l.clone());
+        }
+        for r in &results {
+            if let Some(ref l) = r.symbol.layer {
+                layers_set.insert(l.clone());
+            }
+        }
+        let layers_crossed: Vec<String> = layers_set.into_iter().collect();
+        let layer_crossing_count = layers_crossed.len();
+
+        let mut response = json!({
             "symbol": symbol.name,
             "file": symbol.file_path,
+            "layer": symbol.layer,
             "direction": format!("{:?}", dir).to_lowercase(),
             "affected_symbols": affected,
             "affected_files": files,
             "total_symbols": affected.len(),
             "total_files": files.len(),
-        })
-        .to_string();
+            "layers_crossed": layers_crossed,
+            "layer_crossing_count": layer_crossing_count,
+        });
+
+        if layer_crossing_count >= 3 {
+            response["risk_note"] = json!(format!(
+                "This change crosses {} architectural layers - review carefully.",
+                layer_crossing_count
+            ));
+        }
+
+        let text = response.to_string();
 
         Ok(CallToolResult::success(vec![Content::text(text)]))
     }
@@ -983,6 +1016,62 @@ impl EngramServer {
 
         Ok(CallToolResult::success(vec![Content::text(text)]))
     }
+
+    #[tool(description = "Generate a guided onboarding tour of an indexed codebase. Returns files in recommended reading order, starting from entry points and following the dependency graph. Use this to understand an unfamiliar project.")]
+    async fn engram_tour(
+        &self,
+        Parameters(TourParams { project, limit }): Parameters<TourParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let limit = limit.unwrap_or(20).max(1).min(100);
+
+        let stops: Vec<TourStop> = self
+            .graph
+            .generate_tour(&project, limit)
+            .await
+            .map_err(|e| McpError::internal_error(format!("generate_tour failed: {e}"), None))?;
+
+        if stops.is_empty() {
+            let text = json!({
+                "project": project,
+                "total_files": 0,
+                "tour_stops": 0,
+                "tour": [],
+                "message": "No files found for this project. Has it been indexed with engram_index?",
+            })
+            .to_string();
+            return Ok(CallToolResult::success(vec![Content::text(text)]));
+        }
+
+        let total_files = stops
+            .last()
+            .map(|s| s.order)
+            .unwrap_or(0);
+
+        let tour: Vec<serde_json::Value> = stops
+            .iter()
+            .map(|stop| {
+                json!({
+                    "order": stop.order,
+                    "file": stop.file_path,
+                    "language": stop.language,
+                    "symbols": stop.symbols,
+                    "imports_from": stop.imports_from,
+                    "imported_by": stop.imported_by,
+                    "reason": stop.reason,
+                })
+            })
+            .collect();
+
+        let text = json!({
+            "project": project,
+            "total_files": total_files,
+            "tour_stops": tour.len(),
+            "tour": tour,
+        })
+        .to_string();
+
+        Ok(CallToolResult::success(vec![Content::text(text)]))
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1002,6 +1091,7 @@ impl ServerHandler for EngramServer {
                  Use engram_ingest_github to bulk-import merged PR descriptions from a GitHub repo - run this once per project to solve the cold-start problem. \
                  Use engram_ingest_docs to scan a project directory for markdown files and ingest them as memories - run this once per project to immediately populate Engram from README, ARCHITECTURE, ADRs, and docs. \
                  Use engram_index to build a code graph from a project directory. \
+                 Use engram_tour to get a guided reading-order tour of an indexed project - start here when onboarding to an unfamiliar codebase. \
                  Use engram_impact to analyze what code would break if you change a symbol. \
                  Use engram_lookup_symbol to find where a function or class is defined."
                     .to_string(),

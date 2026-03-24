@@ -61,6 +61,7 @@ pub fn parse_ruby_file(
         project: project.to_string(),
         signature: None,
         file_mtime,
+        layer: None,
     });
 
     // First pass: collect requires/require_relative so call scoring can use them.
@@ -368,6 +369,7 @@ fn process_class(
         project: ctx.project.to_string(),
         signature: Some(build_class_signature(node, &qualified_name, source)),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -537,6 +539,7 @@ fn process_module(
         project: ctx.project.to_string(),
         signature: Some(format!("module {qualified_name}")),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -588,6 +591,7 @@ fn process_method(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -649,6 +653,7 @@ fn process_attr_call(
             project: ctx.project.to_string(),
             signature: Some(format!("{method_name} :{name}")),
             file_mtime: ctx.file_mtime,
+            layer: None,
         });
 
         ctx.result.relationships.push(Relationship {

@@ -1,3 +1,4 @@
+pub mod layers;
 pub mod store;
 pub mod types;
 

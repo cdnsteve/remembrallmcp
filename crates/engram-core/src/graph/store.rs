@@ -35,6 +35,7 @@ impl GraphStore {
                 project TEXT NOT NULL,
                 signature TEXT,
                 file_mtime TIMESTAMPTZ NOT NULL,
+                layer TEXT,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
             "#,
@@ -107,15 +108,16 @@ impl GraphStore {
         let (id,) = sqlx::query_as::<_, (Uuid,)>(&format!(
             r#"
             INSERT INTO {schema}.symbols
-                (id, name, symbol_type, file_path, start_line, end_line, language, project, signature, file_mtime)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                (id, name, symbol_type, file_path, start_line, end_line, language, project, signature, file_mtime, layer)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (id) DO UPDATE SET
                 name = EXCLUDED.name,
                 symbol_type = EXCLUDED.symbol_type,
                 start_line = EXCLUDED.start_line,
                 end_line = EXCLUDED.end_line,
                 signature = EXCLUDED.signature,
-                file_mtime = EXCLUDED.file_mtime
+                file_mtime = EXCLUDED.file_mtime,
+                layer = EXCLUDED.layer
             RETURNING id
             "#,
             schema = self.schema,
@@ -130,6 +132,7 @@ impl GraphStore {
         .bind(&symbol.project)
         .bind(&symbol.signature)
         .bind(symbol.file_mtime)
+        .bind(&symbol.layer)
         .fetch_one(&self.pool)
         .await?;
 
@@ -209,7 +212,7 @@ impl GraphStore {
             )
             SELECT
                 s.id, s.name, s.symbol_type, s.file_path, s.start_line, s.end_line,
-                s.language, s.project, s.signature, s.file_mtime,
+                s.language, s.project, s.signature, s.file_mtime, s.layer,
                 i.depth, i.path, i.rel_type, i.confidence
             FROM impact i
             JOIN {schema}.symbols s ON s.id = i.symbol_id
@@ -251,7 +254,7 @@ impl GraphStore {
         let sql = format!(
             r#"
             SELECT id, name, symbol_type, file_path, start_line, end_line,
-                   language, project, signature, file_mtime
+                   language, project, signature, file_mtime, layer
             FROM {schema}.symbols
             WHERE name = $1
             {clauses}
@@ -269,6 +272,242 @@ impl GraphStore {
 
         let rows = query.fetch_all(&self.pool).await?;
         Ok(rows.into_iter().map(|r| r.into_symbol()).collect())
+    }
+
+    /// Generate a topological ordering of files in a project, starting from entry points.
+    ///
+    /// Entry points are files with in-degree 0 in the import graph (nothing imports them),
+    /// which are typically executables or top-level orchestrators. The algorithm runs
+    /// Kahn's BFS topological sort so every dependency appears before the file that
+    /// depends on it. Any files caught in a cycle are appended at the end.
+    ///
+    /// Returns at most `limit` stops (default 20).
+    pub async fn generate_tour(&self, project: &str, limit: usize) -> Result<Vec<TourStop>> {
+        // ------------------------------------------------------------------
+        // 1. Fetch all file symbols for the project.
+        // ------------------------------------------------------------------
+        #[derive(sqlx::FromRow)]
+        struct FileRow {
+            id: uuid::Uuid,
+            file_path: String,
+            language: String,
+        }
+
+        let file_rows = sqlx::query_as::<_, FileRow>(&format!(
+            r#"
+            SELECT id, file_path, language
+            FROM {schema}.symbols
+            WHERE project = $1 AND symbol_type = 'file'
+            "#,
+            schema = self.schema,
+        ))
+        .bind(project)
+        .fetch_all(&self.pool)
+        .await?;
+
+        if file_rows.is_empty() {
+            return Ok(vec![]);
+        }
+
+        // Build index: file_path -> (uuid, language) - uuid kept for future use.
+        let mut path_to_meta: std::collections::HashMap<String, (uuid::Uuid, String)> =
+            std::collections::HashMap::new();
+        for row in &file_rows {
+            path_to_meta.insert(row.file_path.clone(), (row.id, row.language.clone()));
+        }
+
+        // ------------------------------------------------------------------
+        // 2. Fetch all file-to-file import edges within the project.
+        //    source_file imports target_file.
+        // ------------------------------------------------------------------
+        #[derive(sqlx::FromRow)]
+        struct EdgeRow {
+            source_file: String,
+            target_file: String,
+        }
+
+        let edge_rows = sqlx::query_as::<_, EdgeRow>(&format!(
+            r#"
+            SELECT DISTINCT s.file_path AS source_file, t.file_path AS target_file
+            FROM {schema}.relationships r
+            JOIN {schema}.symbols s ON s.id = r.source_id
+            JOIN {schema}.symbols t ON t.id = r.target_id
+            WHERE r.rel_type = 'imports'
+              AND s.project = $1
+              AND t.project = $1
+              AND s.symbol_type = 'file'
+              AND t.symbol_type = 'file'
+            "#,
+            schema = self.schema,
+        ))
+        .bind(project)
+        .fetch_all(&self.pool)
+        .await?;
+
+        // ------------------------------------------------------------------
+        // 3. Build adjacency structures.
+        //    imports_from[A] = files A imports (A depends on these).
+        //    imported_by[A]  = files that import A.
+        //    in_degree[A]    = number of files that import A.
+        // ------------------------------------------------------------------
+        let all_files: Vec<String> = file_rows.iter().map(|r| r.file_path.clone()).collect();
+
+        let mut imports_from: std::collections::HashMap<String, Vec<String>> =
+            all_files.iter().map(|f| (f.clone(), vec![])).collect();
+        let mut imported_by: std::collections::HashMap<String, Vec<String>> =
+            all_files.iter().map(|f| (f.clone(), vec![])).collect();
+
+        for edge in &edge_rows {
+            if imports_from.contains_key(&edge.source_file)
+                && imported_by.contains_key(&edge.target_file)
+            {
+                imports_from
+                    .entry(edge.source_file.clone())
+                    .or_default()
+                    .push(edge.target_file.clone());
+                imported_by
+                    .entry(edge.target_file.clone())
+                    .or_default()
+                    .push(edge.source_file.clone());
+            }
+        }
+
+        // in_degree[f] = how many files import f.
+        // Files with in_degree 0 are entry points (nobody imports them).
+        let mut in_degree: std::collections::HashMap<String, usize> = all_files
+            .iter()
+            .map(|f| (f.clone(), imported_by[f].len()))
+            .collect();
+
+        // ------------------------------------------------------------------
+        // 4. Fetch non-file symbol names grouped by file.
+        // ------------------------------------------------------------------
+        #[derive(sqlx::FromRow)]
+        struct SymRow {
+            file_path: String,
+            name: String,
+        }
+
+        let sym_rows = sqlx::query_as::<_, SymRow>(&format!(
+            r#"
+            SELECT file_path, name
+            FROM {schema}.symbols
+            WHERE project = $1 AND symbol_type != 'file'
+            ORDER BY file_path, start_line
+            "#,
+            schema = self.schema,
+        ))
+        .bind(project)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut file_symbols: std::collections::HashMap<String, Vec<String>> =
+            all_files.iter().map(|f| (f.clone(), vec![])).collect();
+        for row in sym_rows {
+            file_symbols.entry(row.file_path).or_default().push(row.name);
+        }
+
+        // ------------------------------------------------------------------
+        // 5. Kahn's BFS topological sort.
+        //    Visit entry points (in_degree == 0) first. For each visited file
+        //    decrement the in_degree of the files it imports; when a dependency
+        //    reaches 0 it means all files that import it have been scheduled and
+        //    it can now be added to the queue.
+        // ------------------------------------------------------------------
+        let mut initial_queue: Vec<String> = all_files
+            .iter()
+            .filter(|f| in_degree[*f] == 0)
+            .cloned()
+            .collect();
+        initial_queue.sort();
+
+        let mut queue: std::collections::VecDeque<String> =
+            initial_queue.into_iter().collect();
+        let mut visited: std::collections::HashSet<String> = std::collections::HashSet::new();
+        let mut ordered: Vec<String> = Vec::new();
+
+        while let Some(file) = queue.pop_front() {
+            if visited.contains(&file) {
+                continue;
+            }
+            visited.insert(file.clone());
+            ordered.push(file.clone());
+
+            // Decrement in_degree for everything this file imports.
+            let mut deps: Vec<String> = imports_from
+                .get(&file)
+                .cloned()
+                .unwrap_or_default();
+            deps.sort();
+            for dep in deps {
+                let deg = in_degree.entry(dep.clone()).or_insert(1);
+                if *deg > 0 {
+                    *deg -= 1;
+                }
+                if *deg == 0 && !visited.contains(&dep) {
+                    queue.push_back(dep);
+                }
+            }
+        }
+
+        // Append files not reached due to cycles.
+        let mut remaining: Vec<String> = all_files
+            .iter()
+            .filter(|f| !visited.contains(*f))
+            .cloned()
+            .collect();
+        remaining.sort();
+        ordered.extend(remaining);
+
+        // ------------------------------------------------------------------
+        // 6. Build TourStop list, capped at limit.
+        // ------------------------------------------------------------------
+        let stops: Vec<TourStop> = ordered
+            .into_iter()
+            .take(limit)
+            .enumerate()
+            .map(|(idx, file)| {
+                let order = idx + 1;
+                let language = path_to_meta
+                    .get(&file)
+                    .map(|(_, lang)| lang.clone())
+                    .unwrap_or_default();
+                let symbols = file_symbols.get(&file).cloned().unwrap_or_default();
+                let imp_from = imports_from.get(&file).cloned().unwrap_or_default();
+                let imp_by = imported_by.get(&file).cloned().unwrap_or_default();
+
+                let reason = if imp_by.is_empty() && imp_from.is_empty() {
+                    "Standalone file - no import relationships recorded".to_string()
+                } else if imp_by.is_empty() {
+                    "Entry point - no other files import this".to_string()
+                } else if imp_from.is_empty() {
+                    format!(
+                        "Core module - imported by {} file{}",
+                        imp_by.len(),
+                        if imp_by.len() == 1 { "" } else { "s" }
+                    )
+                } else {
+                    let dep_names: Vec<&str> = imp_from
+                        .iter()
+                        .take(3)
+                        .map(|s| s.rfind('/').map(|i| &s[i + 1..]).unwrap_or(s.as_str()))
+                        .collect();
+                    format!("Depends on: {} (read those first)", dep_names.join(", "))
+                };
+
+                TourStop {
+                    order,
+                    file_path: file,
+                    language,
+                    symbols,
+                    imports_from: imp_from,
+                    imported_by: imp_by,
+                    reason,
+                }
+            })
+            .collect();
+
+        Ok(stops)
     }
 
     /// Remove all symbols and relationships for a given file (for incremental re-index).
@@ -298,6 +537,7 @@ struct SymbolRow {
     project: String,
     signature: Option<String>,
     file_mtime: chrono::DateTime<chrono::Utc>,
+    layer: Option<String>,
 }
 
 impl SymbolRow {
@@ -313,6 +553,7 @@ impl SymbolRow {
             project: self.project,
             signature: self.signature,
             file_mtime: self.file_mtime,
+            layer: self.layer,
         }
     }
 }
@@ -329,6 +570,7 @@ struct ImpactRow {
     project: String,
     signature: Option<String>,
     file_mtime: chrono::DateTime<chrono::Utc>,
+    layer: Option<String>,
     depth: i32,
     path: Vec<Uuid>,
     rel_type: String,
@@ -349,6 +591,7 @@ impl ImpactRow {
                 project: self.project,
                 signature: self.signature,
                 file_mtime: self.file_mtime,
+                layer: self.layer,
             },
             depth: self.depth,
             path: self.path,

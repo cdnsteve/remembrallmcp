@@ -133,36 +133,42 @@ async fn main() -> anyhow::Result<()> {
         id: Uuid::new_v4(), name: "auth/session.py".into(), symbol_type: SymbolType::File,
         file_path: "auth/session.py".into(), start_line: None, end_line: None,
         language: "python".into(), project: "myapp".into(), signature: None, file_mtime: Utc::now(),
+        layer: None,
     };
     let fn_validate = Symbol {
         id: Uuid::new_v4(), name: "validate_user".into(), symbol_type: SymbolType::Function,
         file_path: "auth/session.py".into(), start_line: Some(15), end_line: Some(42),
         language: "python".into(), project: "myapp".into(),
         signature: Some("def validate_user(token: str) -> User".into()), file_mtime: Utc::now(),
+        layer: None,
     };
     let fn_login = Symbol {
         id: Uuid::new_v4(), name: "login".into(), symbol_type: SymbolType::Function,
         file_path: "api/routes.py".into(), start_line: Some(88), end_line: Some(120),
         language: "python".into(), project: "myapp".into(),
         signature: Some("async def login(request: Request) -> Response".into()), file_mtime: Utc::now(),
+        layer: None,
     };
     let fn_middleware = Symbol {
         id: Uuid::new_v4(), name: "auth_middleware".into(), symbol_type: SymbolType::Function,
         file_path: "middleware/auth.py".into(), start_line: Some(10), end_line: Some(35),
         language: "python".into(), project: "myapp".into(),
         signature: Some("async def auth_middleware(request, call_next)".into()), file_mtime: Utc::now(),
+        layer: None,
     };
     let fn_dashboard = Symbol {
         id: Uuid::new_v4(), name: "get_dashboard".into(), symbol_type: SymbolType::Function,
         file_path: "api/views.py".into(), start_line: Some(44), end_line: Some(72),
         language: "python".into(), project: "myapp".into(),
         signature: Some("async def get_dashboard(user: User) -> DashboardData".into()), file_mtime: Utc::now(),
+        layer: None,
     };
     let fn_test = Symbol {
         id: Uuid::new_v4(), name: "test_validate_user".into(), symbol_type: SymbolType::Function,
         file_path: "tests/test_auth.py".into(), start_line: Some(10), end_line: Some(30),
         language: "python".into(), project: "myapp".into(),
         signature: Some("def test_validate_user()".into()), file_mtime: Utc::now(),
+        layer: None,
     };
 
     let t = Instant::now();

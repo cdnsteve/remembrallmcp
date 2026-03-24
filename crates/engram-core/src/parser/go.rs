@@ -71,6 +71,7 @@ pub fn parse_go_file(
         project: project.to_string(),
         signature: None,
         file_mtime,
+        layer: None,
     });
 
     // Pass 1: collect imports.
@@ -273,6 +274,7 @@ fn process_function_declaration(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -326,6 +328,7 @@ fn process_method_declaration(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     // DEFINES from the receiver struct (if we know it), otherwise from the file.
@@ -406,6 +409,7 @@ fn process_type_spec(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {

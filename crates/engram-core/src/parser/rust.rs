@@ -74,6 +74,7 @@ pub fn parse_rust_file(
         project: project.to_string(),
         signature: None,
         file_mtime,
+        layer: None,
     });
 
     // Pass 1: collect `use` declarations (imports).
@@ -393,6 +394,7 @@ fn process_adt(
         project: ctx.project.to_string(),
         signature: Some(format!("{keyword} {name}")),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     ctx.result.relationships.push(Relationship {
@@ -499,6 +501,7 @@ fn process_impl(node: &Node<'_>, parent_id: Uuid, source: &[u8], ctx: &mut Parse
                         project: ctx.project.to_string(),
                         signature: Some(format!("trait {trait_name}")),
                         file_mtime: ctx.file_mtime,
+                        layer: None,
                     });
                     ctx.name_to_id.insert(trait_name.clone(), id);
                 }
@@ -611,6 +614,7 @@ fn process_function(
         project: ctx.project.to_string(),
         signature: Some(signature),
         file_mtime: ctx.file_mtime,
+        layer: None,
     });
 
     // DEFINES: parent scope (file or outer function) defines this function.

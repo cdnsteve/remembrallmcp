@@ -393,6 +393,7 @@ async fn index_project(
             project: project.name.to_string(),
             signature: None,
             file_mtime: Utc::now(),
+            layer: None,
         };
         graph_store.upsert_symbol(&file_sym).await?;
         symbol_id_map.insert((rel_path.clone(), rel_path.clone()), file_sym.id);
@@ -415,6 +416,7 @@ async fn index_project(
                 project: project.name.to_string(),
                 signature: sig.clone(),
                 file_mtime: Utc::now(),
+                layer: None,
             };
             graph_store.upsert_symbol(&sym).await?;
             symbol_id_map.insert((rel_path.clone(), name.clone()), sym.id);

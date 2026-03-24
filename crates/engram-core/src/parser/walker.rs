@@ -22,6 +22,7 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 use walkdir::WalkDir;
 
+use crate::graph::layers::detect_layer;
 use crate::graph::types::{RelationType, Relationship, Symbol, SymbolType};
 use crate::parser::go::parse_go_file;
 use crate::parser::java::parse_java_file;
@@ -201,6 +202,28 @@ pub fn index_directory(
     // ---------------------------------------------------------------------------
     // Phase 2b: merge all symbols and rewrite relationships.
     // ---------------------------------------------------------------------------
+
+    // Propagate layer detection: for each file's parse result, detect the layer
+    // from the file path and apply it to all symbols in that file.
+    let file_results: Vec<_> = file_results
+        .into_iter()
+        .map(|mut fr| {
+            // Determine the layer from the file symbol (always index 0).
+            let file_path = fr
+                .symbols
+                .first()
+                .filter(|s| s.symbol_type == SymbolType::File)
+                .map(|s| s.file_path.as_str())
+                .unwrap_or("");
+            let layer = detect_layer(file_path);
+            // Apply the same layer to every symbol in this file.
+            for sym in &mut fr.symbols {
+                sym.layer = layer.clone();
+            }
+            fr
+        })
+        .collect();
+
     for fr in file_results {
         result.symbols.extend(fr.symbols);
 

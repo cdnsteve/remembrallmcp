@@ -15,6 +15,7 @@ pub struct Symbol {
     pub project: String,
     pub signature: Option<String>,
     pub file_mtime: DateTime<Utc>,
+    pub layer: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -109,4 +110,26 @@ pub enum Direction {
     Downstream,
     /// Both directions
     Both,
+}
+
+/// One stop in a guided codebase tour.
+///
+/// Files are ordered so that dependencies always appear before the files that
+/// depend on them ("read this first, then this").
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TourStop {
+    /// 1-indexed position in the recommended reading order.
+    pub order: usize,
+    /// Relative or absolute file path as stored in the graph.
+    pub file_path: String,
+    /// Language detected during indexing.
+    pub language: String,
+    /// Names of non-file symbols defined in this file (functions, classes, etc.).
+    pub symbols: Vec<String>,
+    /// Files this file imports (should be read before this one).
+    pub imports_from: Vec<String>,
+    /// Files that import this file.
+    pub imported_by: Vec<String>,
+    /// Human-readable explanation of why this file is at this position.
+    pub reason: String,
 }
