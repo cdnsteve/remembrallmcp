@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/engram-core", "crates/engram-server", "crates/engram-test-harness", "crates/engram-recall-test"]
+members = ["crates/engram-core", "crates/engram-server", "crates/engram-test-harness", "crates/engram-recall-test", "crates/engram-integration-tests"]
 # "crates/engram-python" - deferred until PyO3 supports Python 3.14
 resolver = "3"
 

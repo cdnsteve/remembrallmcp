@@ -1,0 +1,17 @@
+[package]
+name = "engram-integration-tests"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "engram-integration-test"
+path = "src/main.rs"
+
+[dependencies]
+engram-core = { path = "../engram-core" }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }

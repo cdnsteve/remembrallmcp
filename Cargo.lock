@@ -804,6 +804,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "engram-integration-tests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "engram-core",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "engram-recall-test"
 version = "0.1.0"
 dependencies = [

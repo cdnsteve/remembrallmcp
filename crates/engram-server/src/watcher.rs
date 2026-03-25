@@ -25,6 +25,7 @@ use notify_debouncer_full::{new_debouncer, DebounceEventResult};
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
+use engram_core::graph::layers::detect_layer;
 use engram_core::graph::store::GraphStore;
 use engram_core::parser::{
     parse_go_file, parse_java_file, parse_kotlin_file, parse_python_file, parse_ruby_file,
@@ -275,6 +276,15 @@ async fn reindex_file(graph: &Arc<GraphStore>, path: &Path, project: &str) {
     // If the extension was not matched, the result will be empty - skip.
     if parse_result.symbols.is_empty() && parse_result.relationships.is_empty() {
         return;
+    }
+
+    // Apply architectural layer detection to all symbols in this file.
+    // The walker does this in its phase-2b loop; we must do it here too so
+    // watcher-reindexed symbols get the same layer metadata as initial index.
+    let layer = detect_layer(&file_path);
+    let mut parse_result = parse_result;
+    for sym in &mut parse_result.symbols {
+        sym.layer = layer.clone();
     }
 
     // Remove stale symbols for this file before upserting fresh ones.
