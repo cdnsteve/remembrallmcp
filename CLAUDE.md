@@ -8,7 +8,7 @@ Knowledge memory layer for AI agents. Rust core, Postgres + pgvector backend, MC
 - **Workspace:** `crates/remembrall-core` (library), `crates/remembrall-server` (MCP server + CLI)
 - **Database:** `postgres://postgres:postgres@localhost:5450/remembrall` (Docker: `cocoindex-postgres`)
 - **Schema:** `remembrall` (configurable via `REMEMBRALL_SCHEMA`)
-- **Architecture doc:** `ARCHITECTURE.md` in project root
+- **Architecture doc:** `docs/architecture.md`
 
 ## Build & Run
 
