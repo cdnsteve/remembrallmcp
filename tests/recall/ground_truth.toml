@@ -1,11 +1,11 @@
-# Engram Recall Ground Truth
+# RemembrallMCP Recall Ground Truth
 #
 # 27 test queries with expected memory IDs, expected search method,
 # and scoring thresholds.
 #
 # Fields per query:
 #   id              - unique query identifier for reporting
-#   query           - the search string passed to engram_recall
+#   query           - the search string passed to remembrall_recall
 #   category        - A/B/C/D/E/F from the test matrix
 #   method          - "semantic", "fulltext", or "hybrid"
 #   relevant_ids    - memory IDs that count as correct results (ordered by relevance)

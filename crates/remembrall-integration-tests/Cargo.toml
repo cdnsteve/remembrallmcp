@@ -1,0 +1,17 @@
+[package]
+name = "remembrall-integration-tests"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "remembrall-integration-test"
+path = "src/main.rs"
+
+[dependencies]
+remembrall-core = { path = "../remembrall-core" }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Engram's parser system converts source code from any supported language into a universal code graph. The graph has only 4 symbol types and 4 relationship types - regardless of whether the source is Python, Rust, Go, or anything else.
+RemembrallMCP's parser system converts source code from any supported language into a universal code graph. The graph has only 4 symbol types and 4 relationship types - regardless of whether the source is Python, Rust, Go, or anything else.
 
 ## The Pipeline
 

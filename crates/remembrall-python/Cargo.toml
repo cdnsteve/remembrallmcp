@@ -1,0 +1,15 @@
+[package]
+name = "remembrall-python"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "remembrall"
+crate-type = ["cdylib"]
+
+[dependencies]
+remembrall-core = { path = "../remembrall-core" }
+pyo3 = { version = "0.23", features = ["extension-module"] }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

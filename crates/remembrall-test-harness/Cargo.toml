@@ -1,0 +1,16 @@
+[package]
+name = "remembrall-test-harness"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "remembrall-test"
+path = "src/main.rs"
+
+[dependencies]
+remembrall-core = { path = "../remembrall-core" }
+toml = "0.8"
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+uuid = { workspace = true }

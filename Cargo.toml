@@ -1,6 +1,6 @@
 [workspace]
-members = ["crates/engram-core", "crates/engram-server", "crates/engram-test-harness", "crates/engram-recall-test", "crates/engram-integration-tests"]
-# "crates/engram-python" - deferred until PyO3 supports Python 3.14
+members = ["crates/remembrall-core", "crates/remembrall-server", "crates/remembrall-test-harness", "crates/remembrall-recall-test", "crates/remembrall-integration-tests"]
+# "crates/remembrall-python" - deferred until PyO3 supports Python 3.14
 resolver = "3"
 
 [workspace.package]

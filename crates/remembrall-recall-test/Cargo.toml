@@ -1,0 +1,22 @@
+[package]
+name = "remembrall-recall-test"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "remembrall-recall-test"
+path = "src/main.rs"
+
+[dependencies]
+remembrall-core = { path = "../remembrall-core" }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+toml = "0.8"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+pgvector = { workspace = true }

@@ -26,4 +26,4 @@ clone_if_missing hono-4.12.8      v4.12.8              https://github.com/honojs
 
 echo ""
 echo "Done. Run the test harness with:"
-echo "  cargo run -p engram-test-harness -- --project test-fixtures/<name> --ground-truth test-fixtures/<name>/ground-truth.toml"
+echo "  cargo run -p remembrall-test-harness -- --project test-fixtures/<name> --ground-truth test-fixtures/<name>/ground-truth.toml"

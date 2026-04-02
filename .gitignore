@@ -3,3 +3,9 @@
 .sugar/
 .DS_Store
 dist/
+.env
+.env.*
+*.pem
+*.key
+credentials*.json
+secrets*.json

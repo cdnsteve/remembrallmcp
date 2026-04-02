@@ -775,101 +775,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "engram-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "fastembed",
- "pgvector",
- "regex",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "tree-sitter",
- "tree-sitter-go",
- "tree-sitter-java",
- "tree-sitter-javascript",
- "tree-sitter-kotlin-ng",
- "tree-sitter-python",
- "tree-sitter-ruby",
- "tree-sitter-rust",
- "tree-sitter-typescript",
- "uuid",
- "walkdir",
-]
-
-[[package]]
-name = "engram-integration-tests"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "engram-core",
- "serde_json",
- "sqlx",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "engram-recall-test"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "engram-core",
- "pgvector",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
- "toml",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
-name = "engram-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "dirs",
- "engram-core",
- "notify",
- "notify-debouncer-full",
- "rmcp",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
- "toml",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "walkdir",
-]
-
-[[package]]
-name = "engram-test-harness"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "engram-core",
- "serde",
- "serde_json",
- "toml",
- "uuid",
-]
-
-[[package]]
 name = "equator"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2812,6 +2717,101 @@ name = "regex-syntax"
 version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
+
+[[package]]
+name = "remembrall-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "fastembed",
+ "pgvector",
+ "regex",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "tree-sitter",
+ "tree-sitter-go",
+ "tree-sitter-java",
+ "tree-sitter-javascript",
+ "tree-sitter-kotlin-ng",
+ "tree-sitter-python",
+ "tree-sitter-ruby",
+ "tree-sitter-rust",
+ "tree-sitter-typescript",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
+name = "remembrall-integration-tests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "remembrall-core",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "remembrall-recall-test"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "pgvector",
+ "remembrall-core",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "remembrall-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "dirs",
+ "notify",
+ "notify-debouncer-full",
+ "remembrall-core",
+ "rmcp",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
+name = "remembrall-test-harness"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "remembrall-core",
+ "serde",
+ "serde_json",
+ "toml",
+ "uuid",
+]
 
 [[package]]
 name = "reqwest"

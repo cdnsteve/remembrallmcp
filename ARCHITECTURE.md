@@ -1,19 +1,19 @@
-# Engram Architecture
+# RemembrallMCP Architecture
 
 *Last updated: March 2026*
 
-## What is Engram?
+## What is RemembrallMCP?
 
-Engram is a knowledge memory layer for AI agents. It gives any MCP-compatible agent persistent memory - decisions, patterns, code relationships, and organizational context that survives between sessions.
+RemembrallMCP is a knowledge memory layer for AI agents. It gives any MCP-compatible agent persistent memory - decisions, patterns, code relationships, and organizational context that survives between sessions.
 
 **The problem:** Every AI agent tool (Copilot, Cursor, Devin) is stateless. Every session starts from zero. Agents have no memory of past decisions, team preferences, error patterns, or how the codebase fits together.
 
-**The solution:** Engram is a Rust-native memory engine backed by Postgres + pgvector. It stores two kinds of knowledge:
+**The solution:** RemembrallMCP is a Rust-native memory engine backed by Postgres + pgvector. It stores two kinds of knowledge:
 
 1. **Text memories** - decisions, patterns, error fixes, preferences, guidelines
 2. **Code graph** - functions, classes, imports, call chains, and impact analysis
 
-Agents query Engram via MCP to get relevant context before acting.
+Agents query RemembrallMCP via MCP to get relevant context before acting.
 
 ---
 
@@ -33,14 +33,14 @@ Source Code                   Organizational Knowledge
 +--------------------------------------------------+
 |              Postgres + pgvector                  |
 |                                                   |
-|  engram.memories          engram.symbols          |
+|  remembrall.memories          remembrall.symbols          |
 |  - content + embedding    - name, type, file      |
 |  - semantic search (HNSW) - language, project     |
 |  - full-text search       - line numbers          |
 |  - scope (org/team/proj)  - signature             |
 |  - fingerprint dedup                              |
-|                           engram.relationships    |
-|  engram.file_index        - source -> target      |
+|                           remembrall.relationships    |
+|  remembrall.file_index        - source -> target      |
 |  - mtime tracking         - Calls, Imports,       |
 |  - incremental reindex      Defines, Inherits     |
 |                           - confidence scoring    |
@@ -49,7 +49,7 @@ Source Code                   Organizational Knowledge
                           v
               +-----------------------+
               |    MCP Server         |
-              |    (engram-server)    |
+              |    (remembrall-server)    |
               |                       |
               |  9 tools (see below)  |
               +-----------+-----------+
@@ -66,11 +66,11 @@ Source Code                   Organizational Knowledge
 ## Crate Structure
 
 ```
-engram/
+remembrallmcp/
   Cargo.toml                    # Workspace root
   install.sh                    # curl installer script
   crates/
-    engram-core/                # Library - all logic lives here
+    remembrall-core/                # Library - all logic lives here
       src/
         lib.rs                  # Module exports
         config.rs               # Config from env vars
@@ -101,21 +101,21 @@ engram/
         spike3.rs               # Ground truth: 10 real-world correctness tests
         parser_smoke.rs         # Tree-sitter parser validation
         kt_ast_debug.rs         # Kotlin AST debugging utility
-    engram-server/              # MCP server + CLI binary
+    remembrall-server/              # MCP server + CLI binary
       src/
         lib.rs                  # 9 MCP tools (store, recall, update, delete,
                                 #   ingest_github, ingest_docs, impact, lookup, index)
         main.rs                 # CLI entry point (init, serve, start, stop, status, doctor, reset, version)
-        config.rs               # EngramConfig - loads ~/.engram/config.toml with env var overrides
-    engram-python/              # PyO3 bindings (deferred until PyO3 supports Python 3.14)
+        config.rs               # RemembrallConfig - loads ~/.remembrall/config.toml with env var overrides
+    remembrall-python/              # PyO3 bindings (deferred until PyO3 supports Python 3.14)
       src/lib.rs
-    engram-test-harness/        # Parser quality testing
+    remembrall-test-harness/        # Parser quality testing
       src/
         main.rs
         comparator.rs
         ground_truth.rs
         scorer.rs
-    engram-recall-test/         # Search quality testing
+    remembrall-recall-test/         # Search quality testing
       src/
         main.rs
         ground_truth.rs
@@ -133,7 +133,7 @@ engram/
 
 Postgres-backed storage for text memories with pgvector embeddings.
 
-**Tables:** `engram.memories` (content, embedding, scope, tags, metadata, fingerprint, importance, expiry)
+**Tables:** `remembrall.memories` (content, embedding, scope, tags, metadata, fingerprint, importance, expiry)
 
 **Key operations:**
 - `store(input, embedding)` - store a memory with its vector embedding
@@ -153,8 +153,8 @@ Postgres-backed storage for text memories with pgvector embeddings.
 Code relationship graph stored as Postgres adjacency tables.
 
 **Tables:**
-- `engram.symbols` - code symbols (File, Function, Class, Method) with file path, line numbers, language, project
-- `engram.relationships` - edges between symbols (Calls, Imports, Defines, Inherits) with confidence scores
+- `remembrall.symbols` - code symbols (File, Function, Class, Method) with file path, line numbers, language, project
+- `remembrall.relationships` - edges between symbols (Calls, Imports, Defines, Inherits) with confidence scores
 
 **Key operations:**
 - `upsert_symbol(symbol)` - insert or update a symbol
@@ -188,7 +188,7 @@ Tree-sitter based source code analysis. Pure Rust, no Python involved.
 
 Incremental code indexing with mtime tracking.
 
-**Table:** `engram.file_index` (file_path, project, mtime, indexed_at)
+**Table:** `remembrall.file_index` (file_path, project, mtime, indexed_at)
 
 **How it works:**
 1. Walk directory, collect files with disk mtimes
@@ -202,9 +202,9 @@ Incremental code indexing with mtime tracking.
 
 ## Ingestion Pipeline
 
-Two tools solve the cold-start problem - getting useful memories into a fresh Engram instance without manually running `engram_store` for every piece of knowledge.
+Two tools solve the cold-start problem - getting useful memories into a fresh RemembrallMCP instance without manually running `remembrall_store` for every piece of knowledge.
 
-### GitHub PR Ingestion (`engram_ingest_github`)
+### GitHub PR Ingestion (`remembrall_ingest_github`)
 
 Shells out to the `gh` CLI (already authenticated on the user's machine) to fetch merged PRs from a GitHub repository. For each PR:
 
@@ -216,7 +216,7 @@ Shells out to the `gh` CLI (already authenticated on the user's machine) to fetc
 
 Requires `gh` to be installed and authenticated. Does not need a GitHub token in the environment.
 
-### Markdown Doc Ingestion (`engram_ingest_docs`)
+### Markdown Doc Ingestion (`remembrall_ingest_docs`)
 
 Walks a directory tree for `.md` files (skipping `node_modules`, `.git`, `target`, `vendor`, etc.). For each file:
 
@@ -234,7 +234,7 @@ Walks a directory tree for `.md` files (skipping `node_modules`, `.git`, `target
 
 ### Contradiction Detection
 
-`engram_store` runs a similarity search at a high threshold (0.75) before storing. If near-duplicate memories are found, they are returned in the response alongside the new memory's ID. This gives the agent the option to update the existing memory instead of creating a near-duplicate.
+`remembrall_store` runs a similarity search at a high threshold (0.75) before storing. If near-duplicate memories are found, they are returned in the response alongside the new memory's ID. This gives the agent the option to update the existing memory instead of creating a near-duplicate.
 
 ### Memory Decay / Access Tracking
 
@@ -242,47 +242,47 @@ Each memory has an `access_count` that increments on `get()`. The `get_readonly(
 
 ### Memory Update
 
-`engram_update` performs a partial update - only the fields supplied are changed. If `content` is updated, a new embedding is generated automatically. This avoids the delete-and-recreate pattern.
+`remembrall_update` performs a partial update - only the fields supplied are changed. If `content` is updated, a new embedding is generated automatically. This avoids the delete-and-recreate pattern.
 
 ---
 
-## MCP Server (`engram-server`)
+## MCP Server (`remembrall-server`)
 
-The MCP server exposes Engram's capabilities to any MCP-compatible agent (Claude Code, Cursor, etc.) over stdio transport.
+The MCP server exposes RemembrallMCP's capabilities to any MCP-compatible agent (Claude Code, Cursor, etc.) over stdio transport.
 
-**Binary:** `target/release/engram` (includes ONNX Runtime for embeddings)
+**Binary:** `target/release/remembrall` (includes ONNX Runtime for embeddings)
 
 ### Tools
 
 | Tool | Description | Key params |
 |------|-------------|------------|
-| `engram_store` | Store knowledge, decisions, patterns | `content`, `memory_type`, `tags`, `importance`, `source_identifier` |
-| `engram_recall` | Hybrid semantic + full-text search | `query`, `limit`, `memory_types`, `tags`, `project` |
-| `engram_update` | Update an existing memory | `id`, `content`, `summary`, `tags`, `importance` |
-| `engram_delete` | Remove a memory by UUID | `id` |
-| `engram_ingest_github` | Bulk-import merged PR descriptions | `repo`, `limit`, `project` |
-| `engram_ingest_docs` | Ingest markdown files from a directory | `path`, `project` |
-| `engram_impact` | Blast radius analysis - what breaks if you change a symbol | `symbol_name`, `direction`, `max_depth` |
-| `engram_lookup_symbol` | Find where a function/class is defined | `name`, `symbol_type`, `project` |
-| `engram_index` | Index a project directory to build the code graph | `path`, `project` |
+| `remembrall_store` | Store knowledge, decisions, patterns | `content`, `memory_type`, `tags`, `importance`, `source_identifier` |
+| `remembrall_recall` | Hybrid semantic + full-text search | `query`, `limit`, `memory_types`, `tags`, `project` |
+| `remembrall_update` | Update an existing memory | `id`, `content`, `summary`, `tags`, `importance` |
+| `remembrall_delete` | Remove a memory by UUID | `id` |
+| `remembrall_ingest_github` | Bulk-import merged PR descriptions | `repo`, `limit`, `project` |
+| `remembrall_ingest_docs` | Ingest markdown files from a directory | `path`, `project` |
+| `remembrall_impact` | Blast radius analysis - what breaks if you change a symbol | `symbol_name`, `direction`, `max_depth` |
+| `remembrall_lookup_symbol` | Find where a function/class is defined | `name`, `symbol_type`, `project` |
+| `remembrall_index` | Index a project directory to build the code graph | `path`, `project` |
 
 ### Embedding
 
-Uses `fastembed` (ONNX Runtime) with `all-MiniLM-L6-v2` (384-dim) for in-process embedding. No external API or Python dependency. Model downloads on first run (~23 MB), or pre-downloaded by `engram init`.
+Uses `fastembed` (ONNX Runtime) with `all-MiniLM-L6-v2` (384-dim) for in-process embedding. No external API or Python dependency. Model downloads on first run (~23 MB), or pre-downloaded by `remembrall init`.
 
-Pluggable via the `Embedder` trait in `engram-core/src/embed.rs`.
+Pluggable via the `Embedder` trait in `remembrall-core/src/embed.rs`.
 
 ### Setup for Claude Code
 
-The `.mcp.json` in the project root configures Claude Code to use the Engram MCP server:
+The `.mcp.json` in the project root configures Claude Code to use the RemembrallMCP server:
 
 ```json
 {
   "mcpServers": {
-    "engram": {
-      "command": "/Users/steve/Dev/engram/target/release/engram",
+    "remembrall": {
+      "command": "/Users/steve/Dev/remembrallmcp/target/release/remembrall",
       "env": {
-        "DATABASE_URL": "postgres://postgres:postgres@localhost:5450/engram"
+        "DATABASE_URL": "postgres://postgres:postgres@localhost:5450/remembrall"
       }
     }
   }
@@ -294,8 +294,8 @@ Once installed via `cargo install` or the curl installer, the simpler form works
 ```json
 {
   "mcpServers": {
-    "engram": {
-      "command": "engram"
+    "remembrall": {
+      "command": "remembrall"
     }
   }
 }
@@ -303,38 +303,38 @@ Once installed via `cargo install` or the curl installer, the simpler form works
 
 ---
 
-## CLI (`engram`)
+## CLI (`remembrall`)
 
 The server binary doubles as a CLI. The default behavior (no subcommand) is to run the MCP server.
 
 | Command | Description |
 |---------|-------------|
-| `engram init` | Set up database (Docker or external Postgres), create schema, download embedding model, write config |
-| `engram init --database-url <url>` | Init with an existing Postgres instead of Docker |
-| `engram serve` | Run the MCP server (explicit form of the default) |
-| `engram start` | Start the Docker database container |
-| `engram stop` | Stop the Docker database container |
-| `engram status` | Show memory count, symbol count, Docker state, connection |
-| `engram doctor` | Check config, Docker, database connection, pgvector, schema, and model cache |
-| `engram reset --force` | Drop and recreate the schema (deletes all data) |
-| `engram version` | Print version, arch, OS, and config path |
+| `remembrall init` | Set up database (Docker or external Postgres), create schema, download embedding model, write config |
+| `remembrall init --database-url <url>` | Init with an existing Postgres instead of Docker |
+| `remembrall serve` | Run the MCP server (explicit form of the default) |
+| `remembrall start` | Start the Docker database container |
+| `remembrall stop` | Stop the Docker database container |
+| `remembrall status` | Show memory count, symbol count, Docker state, connection |
+| `remembrall doctor` | Check config, Docker, database connection, pgvector, schema, and model cache |
+| `remembrall reset --force` | Drop and recreate the schema (deletes all data) |
+| `remembrall version` | Print version, arch, OS, and config path |
 
 ---
 
 ## Config File
 
-Config lives at `~/.engram/config.toml`. Written by `engram init`, loaded by every subcommand. Environment variables override config file values.
+Config lives at `~/.remembrall/config.toml`. Written by `remembrall init`, loaded by every subcommand. Environment variables override config file values.
 
 ```toml
 mode = "local"   # "local" (Docker), "external" (BYO Postgres)
 
 [database]
-url = "postgres://postgres:postgres@localhost:5450/engram"
-schema = "engram"
+url = "postgres://postgres:postgres@localhost:5450/remembrall"
+schema = "remembrall"
 pool_size = 10
 
 [docker]
-container_name = "engram-db"
+container_name = "remembrall-db"
 image = "pgvector/pgvector:pg16"
 port = 5450
 
@@ -346,8 +346,8 @@ model = "all-MiniLM-L6-v2"
 
 | Variable | Overrides |
 |----------|-----------|
-| `ENGRAM_DATABASE_URL` or `DATABASE_URL` | `database.url` |
-| `ENGRAM_SCHEMA` | `database.schema` |
+| `REMEMBRALL_DATABASE_URL` or `DATABASE_URL` | `database.url` |
+| `REMEMBRALL_SCHEMA` | `database.schema` |
 
 ---
 
@@ -355,9 +355,9 @@ model = "all-MiniLM-L6-v2"
 
 **Engine:** PostgreSQL 16 + pgvector 0.8.2
 
-**Connection:** `postgres://postgres:postgres@localhost:5450/engram` (default)
+**Connection:** `postgres://postgres:postgres@localhost:5450/remembrall` (default)
 
-**Schema:** Everything lives in the `engram` schema. Configurable via `ENGRAM_SCHEMA` env var.
+**Schema:** Everything lives in the `remembrall` schema. Configurable via `REMEMBRALL_SCHEMA` env var.
 
 **Tables:**
 | Table | Purpose | Key indexes |
@@ -377,8 +377,8 @@ model = "all-MiniLM-L6-v2"
 
 ### First-time setup
 ```bash
-cargo build -p engram-server --release
-./target/release/engram init
+cargo build -p remembrall-server --release
+./target/release/remembrall init
 ```
 
 ### Manual (without init)
@@ -387,12 +387,12 @@ cargo build -p engram-server --release
 docker start cocoindex-postgres
 
 # Run MCP server directly
-DATABASE_URL="postgres://postgres:postgres@localhost:5450/engram" ./target/release/engram
+DATABASE_URL="postgres://postgres:postgres@localhost:5450/remembrall" ./target/release/remembrall
 ```
 
 ### Run the ground truth tests
 ```bash
-DATABASE_URL="postgres://postgres:postgres@localhost:5450/engram" cargo run --bin spike3
+DATABASE_URL="postgres://postgres:postgres@localhost:5450/remembrall" cargo run --bin spike3
 ```
 
 Expected output: 10/10 tests pass across Sugar (Python), Revsup (Django), NomadSignal (TypeScript).
@@ -444,9 +444,9 @@ Real questions answered correctly against real codebases:
 | Ingestion pipeline | Done | GitHub PR ingestion + markdown doc ingestion |
 | Memory features | Done | Contradiction detection, access tracking, partial update |
 | CLI | Done | init, serve, start, stop, status, doctor, reset, version |
-| Config file | Done | `~/.engram/config.toml` with env var overrides |
+| Config file | Done | `~/.remembrall/config.toml` with env var overrides |
 | Code graph tools | Done | impact, lookup_symbol, index - all 8 languages |
 | Prebuilt binaries | In progress | macOS ARM64 binary exists in `dist/` - CI release pipeline pending |
 | Concurrent load test | TODO | 50 simulated agents hitting the engine |
-| Incremental indexing via MCP | TODO | Wire the Indexer mtime tracking into engram_index |
+| Incremental indexing via MCP | TODO | Wire the Indexer mtime tracking into remembrall_index |
 | Memory expiry | TODO | TTL-based decay using the `expires_at` field |

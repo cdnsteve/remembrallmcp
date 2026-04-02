@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "engram": {
-      "command": "/Users/steve/Dev/engram/target/release/engram",
+    "remembrall": {
+      "command": "/Users/steve/Dev/remembrallmcp/target/release/remembrall",
       "env": {
-        "DATABASE_URL": "postgres://postgres:postgres@localhost:5450/engram"
+        "DATABASE_URL": "postgres://postgres:postgres@localhost:5450/remembrall"
       }
     }
   }

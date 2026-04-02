@@ -2,7 +2,7 @@
 
 ## Overview
 
-Validate that Engram's parsers correctly extract symbols and relationships from real-world codebases across all 8 supported languages. The goal is a repeatable, automated quality score per language.
+Validate that RemembrallMCP's parsers correctly extract symbols and relationships from real-world codebases across all 8 supported languages. The goal is a repeatable, automated quality score per language.
 
 ## Scoring Rubric (per language, out of 100)
 
@@ -140,10 +140,10 @@ expected_symbol = "src/click/decorators.py::command"
 ## Automation
 
 ```
-engram-test-harness (Rust binary)
+remembrall-test-harness (Rust binary)
   |
   +-- Load ground truth TOML
-  +-- Parse test project with Engram
+  +-- Parse test project with RemembrallMCP
   +-- Diff: expected vs actual
   +-- Score: per-dimension percentages
   +-- Report: table with grades
@@ -158,8 +158,8 @@ engram-test-harness (Rust binary)
 
 ## Implementation Status
 
-- Test harness binary: built (`engram-test-harness` crate - TOML loader, diff engine, scorer, report printer)
+- Test harness binary: built (`remembrall-test-harness` crate - TOML loader, diff engine, scorer, report printer)
 - Ground truth fixtures: `test-fixtures/` directory contains TOML files for all 8 small projects
-- Run: `cargo run -p engram-test-harness -- --project /path/to/project --ground-truth test-fixtures/<language>.toml`
+- Run: `cargo run -p remembrall-test-harness -- --project /path/to/project --ground-truth test-fixtures/<language>.toml`
 - Scores for all 8 small projects are reflected in the README quality table
 - Medium projects (Rich, NestJS, Webpack, etc.) not yet pinned as submodules
