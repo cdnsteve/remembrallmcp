@@ -60,3 +60,48 @@ jobs:
         with:
           files: remembrall-*.tar.gz
           generate_release_notes: true
+
+  publish-crates:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish remembrall-core
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p remembrall-core --no-verify || true
+
+      - name: Wait for crates.io indexing
+        run: sleep 30
+
+      - name: Publish remembrall-server
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p remembrall-server --no-verify || true
+
+  publish-docker:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            cdnsteve/remembrallmcp:${{ steps.version.outputs.VERSION }}
+            cdnsteve/remembrallmcp:latest
