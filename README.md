@@ -41,31 +41,44 @@ The savings scale with codebase size. On a small project, an agent can grep and 
 
 This is the difference between an agent that explores your codebase every time and one that already understands it.
 
-### Benchmarks (coming soon)
+### Benchmarks
 
-We're building A/B benchmarks measuring real agent sessions with and without RemembrallMCP:
+We have an A/B benchmark harness that measures real agent sessions with and without RemembrallMCP on identical tasks. See [`benchmarks/`](benchmarks/) for the full setup.
 
 - **Token usage** - total tokens consumed per task (exploration overhead)
+- **Tool calls** - how many grep/read/explore calls the agent needs
 - **Time to completion** - wall clock time for identical coding tasks
 - **Accuracy** - did the agent find all affected files, or miss cross-module impacts?
-- **Tested with:** Claude Code, OpenAI Codex
 
-If you want to run these benchmarks on your own codebase, check back for the test harness.
+Run the benchmarks yourself: `python benchmarks/analyze.py`
 
 ## Requirements
 
-- Rust 1.94+ (for building from source)
-- PostgreSQL 16 with [pgvector](https://github.com/pgvector/pgvector) extension (or let `remembrall init` set up Docker for you)
+- Docker (for the easiest setup) or PostgreSQL 16 with [pgvector](https://github.com/pgvector/pgvector)
 - For GitHub ingestion: [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated
 
 ## Quick Start
 
-### Install
+### Option 1: Download prebuilt binary (fastest)
 
 ```bash
-# Build from source
-cargo build -p remembrall-server --release
+# macOS (Apple Silicon)
+curl -fsSL https://github.com/cdnsteve/remembrallmcp/releases/latest/download/remembrall-aarch64-apple-darwin.tar.gz | tar xz
+sudo mv remembrall /usr/local/bin/
 
+# macOS (Intel)
+curl -fsSL https://github.com/cdnsteve/remembrallmcp/releases/latest/download/remembrall-x86_64-apple-darwin.tar.gz | tar xz
+sudo mv remembrall /usr/local/bin/
+
+# Linux (x86_64)
+curl -fsSL https://github.com/cdnsteve/remembrallmcp/releases/latest/download/remembrall-x86_64-unknown-linux-gnu.tar.gz | tar xz
+sudo mv remembrall /usr/local/bin/
+```
+
+### Option 2: Build from source (requires Rust 1.94+)
+
+```bash
+cargo build -p remembrall-server --release
 # Binary is at target/release/remembrall
 ```
 

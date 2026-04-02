@@ -1,0 +1,64 @@
+# RemembrallMCP Benchmark Tasks
+#
+# Each task is a coding question given identically to an AI agent
+# WITH and WITHOUT RemembrallMCP. We measure token usage, tool calls,
+# time, and accuracy.
+#
+# Repo: pallets/click (Python CLI framework, ~90 files)
+# Ground truth derived from tree-sitter analysis + manual verification.
+
+[meta]
+repo = "pallets/click"
+language = "python"
+ref = "8.1.7"
+clone_command = "gh repo clone pallets/click -- --branch 8.1.7 --depth 1"
+
+[[tasks]]
+id = "blast-radius-invoke"
+name = "Blast radius analysis"
+prompt = "If I change the signature of BaseCommand.invoke() in core.py, what other functions and files are affected? List every function that calls invoke() and every file that would need changes."
+type = "analysis"
+expected_files = ["core.py", "testing.py", "decorators.py"]
+expected_symbols = ["Group.invoke", "Context.invoke", "BaseCommand.main"]
+max_reasonable_tool_calls = 8
+why = "Without the graph, agent greps file by file. With remembrall_impact, one call."
+
+[[tasks]]
+id = "find-callers-format-help"
+name = "Find all callers"
+prompt = "Find every caller of format_help() across the Click codebase. List the function name, file, and line number for each."
+type = "analysis"
+expected_files = ["core.py", "utils.py"]
+expected_symbols = ["BaseCommand.get_help", "MultiCommand.format_help"]
+max_reasonable_tool_calls = 6
+why = "Without: recursive grep + manual tracing. With: remembrall_lookup_symbol + relationship traversal."
+
+[[tasks]]
+id = "trace-context-propagation"
+name = "Trace data flow"
+prompt = "Trace how Context gets created and passed through command invocation. List every function that receives or creates a Context object."
+type = "analysis"
+expected_files = ["core.py", "globals.py", "decorators.py"]
+expected_symbols = ["Context.__init__", "BaseCommand.make_context", "invoke", "pass_context"]
+max_reasonable_tool_calls = 10
+why = "Deep multi-hop dependency chain. Token savings compound with each hop."
+
+[[tasks]]
+id = "rename-class"
+name = "Rename a class"
+prompt = "I want to rename BaseCommand to CommandBase everywhere in the Click codebase. What files need changes and what would break? Don't make the changes, just analyze."
+type = "refactor"
+expected_files = ["core.py", "decorators.py", "testing.py", "shell_complete.py"]
+expected_symbols = []
+max_reasonable_tool_calls = 12
+why = "Requires knowing all references. Graph gives completeness; grep misses indirect references."
+
+[[tasks]]
+id = "add-parameter"
+name = "Add a parameter"
+prompt = "Add a 'deprecated: bool = False' parameter to the @command decorator in Click. When True, it should print a deprecation warning when the command is invoked. What files need to change and what's the implementation plan?"
+type = "refactor"
+expected_files = ["core.py", "decorators.py"]
+expected_symbols = ["command", "BaseCommand.__init__", "BaseCommand.invoke"]
+max_reasonable_tool_calls = 15
+why = "Requires understanding the decorator-to-class wiring. Graph shows the relationship chain."

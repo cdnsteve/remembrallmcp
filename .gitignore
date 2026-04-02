@@ -9,3 +9,5 @@ dist/
 *.key
 credentials*.json
 secrets*.json
+benchmarks/results/
+benchmarks/reports/
