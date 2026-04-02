@@ -58,9 +58,9 @@ pub struct IndexerConfig {
 }
 
 impl IndexerConfig {
-    /// Sensible defaults covering Python, TypeScript, JavaScript, and Rust.
+    /// All supported extensions. Uses [`supported_extensions`] as the source of truth.
     pub fn default_extensions() -> Vec<String> {
-        vec!["py".into(), "ts".into(), "js".into(), "rs".into()]
+        supported_extensions().iter().map(|s| (*s).to_string()).collect()
     }
 
     /// Directories that almost never contain user code worth indexing.
@@ -370,6 +370,29 @@ impl Indexer {
 // Utility functions
 // ---------------------------------------------------------------------------
 
+/// All file extensions the indexer and walker support, without a leading dot.
+///
+/// This is the single authoritative list. `IndexerConfig::default_extensions`
+/// and `parser::walker` both derive from this set - update here first when
+/// adding language support.
+pub fn supported_extensions() -> &'static [&'static str] {
+    &[
+        "py",   // Python
+        "ts",   // TypeScript
+        "tsx",  // TypeScript + JSX
+        "js",   // JavaScript
+        "jsx",  // JavaScript + JSX
+        "mjs",  // ES module JavaScript
+        "cjs",  // CommonJS JavaScript
+        "rs",   // Rust
+        "go",   // Go
+        "rb",   // Ruby
+        "java", // Java
+        "kt",   // Kotlin
+        "kts",  // Kotlin script
+    ]
+}
+
 /// Map a file extension to a normalised language tag.
 fn language_for_extension(path: &Path) -> &'static str {
     match path.extension().and_then(|e| e.to_str()).unwrap_or("") {
@@ -377,6 +400,10 @@ fn language_for_extension(path: &Path) -> &'static str {
         "ts" | "tsx" => "typescript",
         "js" | "jsx" | "mjs" | "cjs" => "javascript",
         "rs" => "rust",
+        "go" => "go",
+        "rb" => "ruby",
+        "java" => "java",
+        "kt" | "kts" => "kotlin",
         _ => "unknown",
     }
 }

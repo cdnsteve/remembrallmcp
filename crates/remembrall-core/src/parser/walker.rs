@@ -85,6 +85,10 @@ pub fn index_directory(
             .unwrap_or("")
             .to_lowercase();
 
+        // NOTE: This per-extension dispatch is intentionally duplicated from
+        // `crate::indexer::supported_extensions`. If you add a new language,
+        // update `supported_extensions()` in indexer.rs first, then mirror it
+        // here. A future refactor should consolidate these two dispatch paths.
         let is_python = ext == "py";
         let is_rust = ext == "rs";
         let is_ruby = ext == "rb";
