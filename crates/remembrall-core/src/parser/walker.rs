@@ -244,20 +244,18 @@ pub fn index_directory(
                 // this project and the graph store would reject the FK anyway.
                 // We still push it so callers can inspect it if desired.
                 result.relationships.push(rel);
-            } else if rel.rel_type == RelationType::Calls {
-                // For CALLS: when a synthetic target UUID maps to multiple real symbols
-                // (ambiguous method name), emit one edge per candidate.  This allows the
-                // comparator to find a match even when the bare name is shared by many
-                // methods across files.  DEFINES and INHERITS use single-symbol targets
-                // (the parent class/method is known at parse time) so they use the
-                // single-match path below.
+            } else if rel.rel_type == RelationType::Calls
+                || rel.rel_type == RelationType::UsesType
+            {
+                // For CALLS and USES_TYPE: when a synthetic target UUID maps to
+                // multiple real symbols (ambiguous name), emit one edge per candidate.
                 if let Some(real_ids) = synthetic_to_real.get(&rel.target_id) {
                     let conf = rel.confidence / real_ids.len() as f32;
                     for &real_id in real_ids {
                         result.relationships.push(Relationship {
                             source_id: rel.source_id,
                             target_id: real_id,
-                            rel_type: RelationType::Calls,
+                            rel_type: rel.rel_type.clone(),
                             confidence: conf,
                         });
                     }

@@ -492,6 +492,9 @@ fn process_function(
         confidence: 1.0,
     });
 
+    // USES_TYPE: relationships from type annotations on parameters and return type.
+    collect_type_annotations(node, id, source, ctx);
+
     id
 }
 
@@ -582,6 +585,130 @@ fn build_function_signature(node: &Node<'_>, name: &str, source: &[u8]) -> Strin
     format!(
         "def {name}{params}{}",
         return_type.as_deref().unwrap_or("")
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Type annotation extraction
+// ---------------------------------------------------------------------------
+
+/// Walk a function node's parameter list and return-type annotation, collecting
+/// `UsesType` relationships for every non-builtin type name found.
+fn collect_type_annotations(
+    func_node: &Node<'_>,
+    func_id: Uuid,
+    source: &[u8],
+    ctx: &mut ParseContext<'_>,
+) {
+    let mut type_names: Vec<String> = Vec::new();
+
+    // 1. Parameter annotations.
+    if let Some(params) = func_node.child_by_field_name("parameters") {
+        let mut cursor = params.walk();
+        for param in params.named_children(&mut cursor) {
+            if param.kind() == "typed_parameter" || param.kind() == "typed_default_parameter" {
+                if let Some(type_node) = param.child_by_field_name("type") {
+                    extract_type_identifiers(&type_node, source, &mut type_names);
+                }
+            }
+        }
+    }
+
+    // 2. Return type annotation.
+    if let Some(return_type) = func_node.child_by_field_name("return_type") {
+        extract_type_identifiers(&return_type, source, &mut type_names);
+    }
+
+    // 3. Create UsesType relationships for non-builtin types.
+    for type_name in type_names {
+        if is_builtin_type(&type_name) {
+            continue;
+        }
+        let (target_id, confidence) = if let Some(&id) = ctx.name_to_id.get(&type_name) {
+            (id, 1.0_f32)
+        } else if ctx.imported_names.contains(&type_name) {
+            (Uuid::new_v5(&Uuid::NAMESPACE_OID, type_name.as_bytes()), 0.8)
+        } else {
+            (Uuid::new_v5(&Uuid::NAMESPACE_OID, type_name.as_bytes()), 0.5)
+        };
+
+        ctx.result.relationships.push(Relationship {
+            source_id: func_id,
+            target_id,
+            rel_type: RelationType::UsesType,
+            confidence,
+        });
+    }
+}
+
+/// Recursively extract all identifier names from a type annotation node.
+///
+/// - `identifier`  -> push the name directly
+/// - `attribute`   -> push only the attribute part (e.g. `t.Optional` -> `Optional`)
+/// - everything else (subscript, union_type, etc.) -> recurse into named children
+fn extract_type_identifiers(node: &Node<'_>, source: &[u8], out: &mut Vec<String>) {
+    match node.kind() {
+        "identifier" => {
+            let name = node_text(node, source);
+            if !name.is_empty() {
+                out.push(name);
+            }
+        }
+        "attribute" => {
+            // `t.Optional` or `typing.Optional` - take only the attribute part.
+            if let Some(attr) = node.child_by_field_name("attribute") {
+                let name = node_text(&attr, source);
+                if !name.is_empty() {
+                    out.push(name);
+                }
+            }
+        }
+        "string" | "concatenated_string" => {
+            // Python forward references: `"BaseCommand"` or `'BaseCommand'`
+            // Strip quotes and treat the contents as a type name.
+            let text = node_text(node, source);
+            let unquoted = text
+                .trim_start_matches('"')
+                .trim_end_matches('"')
+                .trim_start_matches('\'')
+                .trim_end_matches('\'')
+                .trim();
+            // Only handle simple names (no dots, brackets, or spaces)
+            if !unquoted.is_empty()
+                && !unquoted.contains('.')
+                && !unquoted.contains('[')
+                && !unquoted.contains(' ')
+            {
+                out.push(unquoted.to_string());
+            }
+        }
+        _ => {
+            // subscript (`Optional[X]`), binary_operator (`X | Y`), tuple, list, etc.
+            let mut cursor = node.walk();
+            for child in node.named_children(&mut cursor) {
+                extract_type_identifiers(&child, source, out);
+            }
+        }
+    }
+}
+
+/// Returns true for Python builtin types and common `typing` module constructs
+/// that should not generate UsesType relationships.
+fn is_builtin_type(name: &str) -> bool {
+    matches!(
+        name,
+        "str" | "int" | "float" | "bool" | "None" | "none"
+            | "list" | "dict" | "tuple" | "set" | "bytes" | "type" | "object"
+            | "Any" | "Optional" | "Union" | "List" | "Dict" | "Tuple" | "Set"
+            | "Type" | "Callable" | "Iterator" | "Generator" | "Coroutine"
+            | "Sequence" | "Mapping" | "MutableMapping" | "Iterable"
+            | "ClassVar" | "Final" | "Literal" | "TypeVar" | "Protocol"
+            | "AbstractSet" | "IO" | "TextIO" | "BinaryIO" | "Pattern" | "Match"
+            | "SupportsInt" | "SupportsFloat" | "SupportsComplex" | "SupportsBytes"
+            | "SupportsAbs" | "SupportsRound" | "Reversible" | "Container"
+            | "Collection" | "Hashable" | "Sized" | "Awaitable" | "AsyncIterator"
+            | "AsyncIterable" | "AsyncGenerator" | "ContextManager"
+            | "AsyncContextManager" | "NoReturn" | "Never"
     )
 }
 

@@ -65,6 +65,7 @@ pub enum RelationType {
     Imports,
     Defines,
     Inherits,
+    UsesType,
 }
 
 impl std::fmt::Display for RelationType {
@@ -74,6 +75,7 @@ impl std::fmt::Display for RelationType {
             Self::Imports => write!(f, "imports"),
             Self::Defines => write!(f, "defines"),
             Self::Inherits => write!(f, "inherits"),
+            Self::UsesType => write!(f, "uses_type"),
         }
     }
 }
@@ -86,6 +88,7 @@ impl std::str::FromStr for RelationType {
             "imports" => Ok(Self::Imports),
             "defines" => Ok(Self::Defines),
             "inherits" => Ok(Self::Inherits),
+            "uses_type" => Ok(Self::UsesType),
             _ => Err(format!("Unknown relation type: {s}")),
         }
     }
