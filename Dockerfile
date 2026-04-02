@@ -1,18 +1,24 @@
 # syntax=docker/dockerfile:1.7
 
 # ── Builder ────────────────────────────────────────────────────────────────────
-FROM rust:1.88.0-bookworm AS builder
+FROM ubuntu:24.04 AS builder
 
-# System packages needed at build time:
-#   pkg-config + libssl-dev  - OpenSSL linkage for sqlx / reqwest
-#   clang                    - tree-sitter crates compile C grammars via cc crate
-#   liblzma-dev              - ort-sys uses lzma-rust2 which may need liblzma
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Rust + system packages needed at build time
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
     pkg-config \
     libssl-dev \
     clang \
     liblzma-dev \
+    ca-certificates \
   && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.88.0
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /build
 
@@ -23,13 +29,12 @@ COPY crates/ crates/
 RUN cargo build -p remembrall-server --release
 
 # ── Runtime ────────────────────────────────────────────────────────────────────
-FROM debian:bookworm-slim AS runtime
+FROM ubuntu:24.04 AS runtime
 
-# libssl3        - OpenSSL runtime (sqlx TLS)
-# libstdc++6     - C++ stdlib (ONNX Runtime references)
-# ca-certificates - TLS certificate bundle (HTTPS for model download)
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libssl3 \
+    libssl3t64 \
     libstdc++6 \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/*

@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 description = "MCP server for RemembrallMCP - persistent memory and code intelligence for AI agents"
 repository = "https://github.com/cdnsteve/remembrallmcp"
+readme = "README.md"
 
 [[bin]]
 name = "remembrall"
