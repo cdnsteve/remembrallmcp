@@ -1,7 +1,7 @@
 //! Source code parsers using tree-sitter.
 //!
 //! Supported languages: Python (.py), TypeScript (.ts, .tsx), JavaScript (.js, .jsx),
-//! Rust (.rs), Ruby (.rb), Go (.go), Java (.java), Kotlin (.kt, .kts).
+//! Rust (.rs), Ruby (.rb), Go (.go), Java (.java), Kotlin (.kt, .kts), C# (.cs).
 //!
 //! # Entry points
 //!
@@ -12,6 +12,7 @@
 //! - [`parse_go_file`] - Go
 //! - [`parse_java_file`] - Java
 //! - [`parse_kotlin_file`] - Kotlin
+//! - [`parse_csharp_file`] - C#
 //! - [`parse_file`] - unified dispatch by file extension
 //! - [`index_directory`] - walk a directory and parse all supported files
 //!
@@ -27,6 +28,7 @@
 mod go;
 mod java;
 mod kotlin;
+mod csharp;
 mod python;
 mod ruby;
 mod rust;
@@ -36,6 +38,7 @@ mod walker;
 pub use go::parse_go_file;
 pub use java::parse_java_file;
 pub use kotlin::parse_kotlin_file;
+pub use csharp::parse_csharp_file;
 pub use python::{parse_python_file, FileParseResult, RawImport};
 pub use ruby::parse_ruby_file;
 pub use rust::parse_rust_file;
@@ -69,6 +72,7 @@ pub fn parse_file(
         "go" => Some(parse_go_file(file_path, source, project, mtime)),
         "java" => Some(parse_java_file(file_path, source, project, mtime)),
         "kt" | "kts" => Some(parse_kotlin_file(file_path, source, project, mtime)),
+        "cs" => Some(parse_csharp_file(file_path, source, project, mtime)),
         ext => {
             let lang = TsLang::from_extension(ext)?;
             Some(parse_ts_file(file_path, source, project, mtime, lang))

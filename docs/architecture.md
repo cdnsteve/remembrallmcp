@@ -26,7 +26,7 @@ Source Code                   Organizational Knowledge
 +-------------------+    +------------------------+
 | Tree-sitter       |    | Ingestion Pipeline     |
 | Parser            |    | (GitHub PRs, Markdown) |
-| (8 languages)     |    |                        |
+| (9 languages)     |    |                        |
 +--------+----------+    +-----------+------------+
          |                            |
          v                            v
@@ -98,7 +98,7 @@ remembrallmcp/
           walker.rs             # Directory walker + two-phase cross-file resolution
         indexer.rs              # Incremental indexer with mtime tracking + CodeParser trait
                                 #   supported_extensions() is the single source of truth
-                                #   for all 13 supported file extensions across 8 languages
+                                #   for all 14 supported file extensions across 9 languages
         search.rs               # Hybrid search stub
         ingest.rs               # Ingestion logic: GitHub PR import + markdown doc ingestion
       src/bin/
@@ -214,7 +214,7 @@ Incremental code indexing with mtime tracking.
 
 **`CodeParser` trait** - plug-in interface so the indexer doesn't own parsing logic. Any language can be added by implementing `parse(file_path, source, language)`.
 
-**`supported_extensions()`** - public function in `indexer.rs` that is the single source of truth for all supported file extensions. The file walker uses it directly, so adding a new extension here automatically enables indexing for that type. Currently 13 extensions across 8 languages: `py`, `ts`, `tsx`, `js`, `jsx`, `mjs`, `cjs`, `rs`, `go`, `rb`, `java`, `kt`, `kts`.
+**`supported_extensions()`** - public function in `indexer.rs` that is the single source of truth for all supported file extensions. The file walker uses it directly, so adding a new extension here automatically enables indexing for that type. Currently 14 extensions across 9 languages: `py`, `ts`, `tsx`, `js`, `jsx`, `mjs`, `cjs`, `rs`, `go`, `rb`, `java`, `kt`, `kts`, `cs`.
 
 ---
 
@@ -482,7 +482,7 @@ Real questions answered correctly against real codebases:
 | Memory features | Done | Contradiction detection, access tracking, partial update |
 | CLI | Done | init, serve, start, stop, status, doctor, reset, version |
 | Config file | Done | `~/.remembrall/config.toml` with env var overrides |
-| Code graph tools | Done | impact, lookup_symbol, index - all 8 languages |
+| Code graph tools | Done | impact, lookup_symbol, index - all 9 languages |
 | Tools module split | Done | memory/graph/ingest modules with thin wrappers in lib.rs |
 | UsesType relationship | Done | Type annotation tracking in Python, TS, Rust, Java, Go, Kotlin |
 | Docker support | Done | Dockerfile + docker-compose.yml for one-command setup |

@@ -76,6 +76,7 @@ crates/
     parser/java.rs       # Tree-sitter Java parser
     parser/ruby.rs       # Tree-sitter Ruby parser
     parser/kotlin.rs     # Tree-sitter Kotlin parser
+    parser/csharp.rs     # Tree-sitter C# parser
     parser/walker.rs     # Directory walker + two-phase cross-file resolution
     indexer.rs           # Incremental indexer with mtime tracking + CodeParser trait
     config.rs            # Config from env vars
@@ -184,4 +185,4 @@ git checkout develop
 - Tree-sitter parsing is all Rust - no Python in the pipeline
 - Ingestion logic (GitHub PRs, markdown docs) lives in `remembrall-core/src/ingest.rs` - reusable without MCP. Server tools are thin wrappers.
 - MCP tool implementations use a delegation pattern: `#[tool]` methods in `lib.rs` call `*_impl()` functions in `tools/` modules
-- `supported_extensions()` in `indexer.rs` is the single source of truth for all 13 supported file extensions
+- `supported_extensions()` in `indexer.rs` is the single source of truth for all 14 supported file extensions
