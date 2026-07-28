@@ -2,7 +2,7 @@
 
 ## Overview
 
-Validate that RemembrallMCP's parsers correctly extract symbols and relationships from real-world codebases across all 8 supported languages. The goal is a repeatable, automated quality score per language.
+Validate that RemembrallMCP's parsers correctly extract symbols and relationships from real-world codebases across all 9 supported languages. The goal is a repeatable, automated quality score per language.
 
 ## Scoring Rubric (per language, out of 100)
 
@@ -58,6 +58,8 @@ Validate that RemembrallMCP's parsers correctly extract symbols and relationship
 
 **Kotlin:** extension functions, companion objects, data classes, object declarations, sealed classes, delegated properties, coroutine builders, inline functions, type aliases, when expressions
 
+**C#:** interfaces, generic interfaces, class + interface inheritance, static/instance/readonly fields, auto-properties, constructors, cross-file calls, using directives (namespace/static/alias), reflection dispatch (typeof/Activator), LINQ method chains, nested generic classes, async streams (IAsyncEnumerable), records
+
 ## Test Corpus
 
 ### Small (validate basics)
@@ -72,6 +74,7 @@ Validate that RemembrallMCP's parsers correctly extract symbols and relationship
 | Go | Cobra | 19 | v1.10.2 | Struct methods, implicit interfaces |
 | Java | Gson | 86 | gson-parent-2.12.1 | TypeAdapter hierarchy, generics, factories |
 | Kotlin | Exposed core | 79 | 0.61.0 | Extension functions, sealed classes, DSL |
+| C# | MediatR | 32 | v12.4.1 | Interfaces, generic interfaces, inheritance, auto-properties, static fields |
 
 ### Medium (validate cross-file resolution + scale)
 
@@ -159,7 +162,7 @@ remembrall-test-harness (Rust binary)
 ## Implementation Status
 
 - Test harness binary: built (`remembrall-test-harness` crate - TOML loader, diff engine, scorer, report printer)
-- Ground truth fixtures: `test-fixtures/` directory contains TOML files for all 8 small projects
+- Ground truth fixtures: `test-fixtures/` directory contains TOML files for all 9 small projects
 - Run: `cargo run -p remembrall-test-harness -- --project /path/to/project --ground-truth test-fixtures/<language>.toml`
-- Scores for all 8 small projects are reflected in the README quality table
+- Scores for all 9 small projects are reflected in the README quality table
 - Medium projects (Rich, NestJS, Webpack, etc.) not yet pinned as submodules

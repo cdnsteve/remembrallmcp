@@ -23,6 +23,7 @@ clone_if_missing sidekiq-8.1.1    v8.1.1               https://github.com/sideki
 clone_if_missing gson-2.12.1      gson-parent-2.12.1   https://github.com/google/gson.git
 clone_if_missing exposed-0.61.0   0.61.0               https://github.com/JetBrains/Exposed.git
 clone_if_missing hono-4.12.8      v4.12.8              https://github.com/honojs/hono.git
+clone_if_missing mediatr-12.4.1   v12.4.1              https://github.com/jbogard/MediatR.git
 
 echo ""
 echo "Done. Run the test harness with:"

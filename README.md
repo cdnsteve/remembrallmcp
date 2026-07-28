@@ -265,9 +265,9 @@ Restart your MCP client. All 9 tools will be available automatically.
 | Ruby | .rb | B (87.9) |
 | TypeScript | .ts, .tsx | B (84.3) |
 | Kotlin | .kt, .kts | B (82.9) |
-| C# | .cs | New |
+| C# | .cs | A (96.8) |
 
-Scores measured against real open-source projects (Click, Gson, Axios, bat, Cobra, Sidekiq, Hono, Exposed) using automated ground truth tests. C# passes the field-capture ground truth (symbols, Defines, References, and impact analysis at 100%).
+Scores measured against real open-source projects (Click, Gson, Axios, bat, Cobra, Sidekiq, Hono, Exposed, MediatR) using automated ground truth tests. The C# score is measured against MediatR 12.4.1 (69 symbols, 48 relationships, 9 impact queries, 10 edge cases): symbols, imports, and edge cases at 100%, with the gap coming from generic-interface inheritance (`: IPipelineBehavior<TRequest, TResponse>` resolves to a synthetic UUID instead of the class symbol) and a field-dispatch call misresolution. C# field-level references are validated separately by the field-capture fixture at 100%.
 
 ## Cold Start
 
