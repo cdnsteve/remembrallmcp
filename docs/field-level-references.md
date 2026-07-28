@@ -16,7 +16,7 @@ the tree-sitter `Function`/`Class`/`Method` captures. Worse, the actual referenc
 codebases is a **string literal inside a DSL call** (`Sum("amount")`, `.filter(amount__gt=1)`),
 which no language server resolves either.
 
-This doc designs a universal abstraction that covers all 13 supported languages and, uniquely,
+This doc designs a universal abstraction that covers all 9 supported languages and, uniquely,
 resolves the string-literal DSL references that LSP servers refuse to build.
 
 ## Research summary
@@ -82,7 +82,7 @@ will build it because LSP cannot represent it.
 
 ## The 7-kind taxonomy
 
-Every field reference across the 13 supported languages (and beyond) maps onto one of these.
+Every field reference across the 9 supported languages (and beyond) maps onto one of these.
 Resolution class in parens: **A** = tree-sitter alone (same-file, direct); **B** = light
 type/scope inference (cross-file direct); **C** = framework/DSL-aware resolver;
 **D** = receiver-type inference.
@@ -273,7 +273,7 @@ No standard helps here. Design it data-driven, not hardcoded:
   surface field references.
 
 Outcome: field-level "find references" and blast-radius for the common `obj.field` case across
-all 13 languages.
+all 9 languages.
 
 ### Phase 2 - Bracket + computed-key parity with TypeScript
 

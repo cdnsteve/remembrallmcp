@@ -1,6 +1,6 @@
 # Ground truth for field-level reference tracking (Phase 1).
 #
-# Three small fixtures (Python, Rust, Go) each with a class/struct, a data
+# Four small fixtures (Python, Rust, Go, C#) each with a class/struct, a data
 # field, and a self/receiver read of that field. Verifies the parser captures
 # Field symbols, Defines (type -> field) and References (method -> field)
 # edges, and that upstream impact analysis on a field returns the method that
@@ -127,3 +127,39 @@ target = "src/invoice.py::amount"
 direction = "upstream"
 hops = 1
 expected = ["src/invoice.py::total"]
+# ---------------------------------------------------------------------------
+# C# fixture (src/order.cs)
+# ---------------------------------------------------------------------------
+
+[[symbols]]
+file = "src/order.cs"
+name = "Order"
+kind = "Class"
+
+[[symbols]]
+file = "src/order.cs"
+name = "Total"
+kind = "Method"
+
+[[symbols]]
+file = "src/order.cs"
+name = "amount"
+kind = "Field"
+
+[[relationships]]
+kind = "Defines"
+source = "src/order.cs::Order"
+target = "src/order.cs::amount"
+tier = "must_find"
+
+[[relationships]]
+kind = "References"
+source = "src/order.cs::Total"
+target = "src/order.cs::amount"
+tier = "must_find"
+
+[[impact_queries]]
+target = "src/order.cs::amount"
+direction = "upstream"
+hops = 1
+expected = ["src/order.cs::Total"]

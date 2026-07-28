@@ -2720,7 +2720,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "remembrall-core"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2735,6 +2735,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tree-sitter",
+ "tree-sitter-c-sharp",
  "tree-sitter-go",
  "tree-sitter-java",
  "tree-sitter-javascript",
@@ -2749,7 +2750,7 @@ dependencies = [
 
 [[package]]
 name = "remembrall-integration-tests"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2762,7 +2763,7 @@ dependencies = [
 
 [[package]]
 name = "remembrall-recall-test"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2780,7 +2781,7 @@ dependencies = [
 
 [[package]]
 name = "remembrall-server"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2802,7 +2803,7 @@ dependencies = [
 
 [[package]]
 name = "remembrall-test-harness"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "remembrall-core",
@@ -3935,6 +3936,16 @@ dependencies = [
  "regex-syntax",
  "serde_json",
  "streaming-iterator",
+ "tree-sitter-language",
+]
+
+[[package]]
+name = "tree-sitter-c-sharp"
+version = "0.23.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1aac67f1ad71de1d6d39708d34811081c26dfa495658de6c14c34200849357c"
+dependencies = [
+ "cc",
  "tree-sitter-language",
 ]
 

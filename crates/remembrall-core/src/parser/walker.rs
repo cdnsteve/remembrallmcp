@@ -545,6 +545,7 @@ fn try_path_variants(stem: &str, path_stem_to_uuid: &HashMap<String, Uuid>) -> O
         format!("{stem}.java"),
         format!("{stem}.kt"),
         format!("{stem}.kts"),
+        format!("{stem}.cs"),
     ];
 
     for candidate in &candidates {
@@ -592,7 +593,7 @@ fn try_path_variants(stem: &str, path_stem_to_uuid: &HashMap<String, Uuid>) -> O
 fn strip_source_extension(path: &str) -> &str {
     let extensions = [
         ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".rs", ".rb", ".go", ".java",
-        ".kt", ".kts",
+        ".kt", ".kts", ".cs",
     ];
     for ext in &extensions {
         if path.ends_with(ext) {
