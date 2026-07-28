@@ -6,9 +6,9 @@ Whole-codebase knowledge for AI coding agents. A field-aware code graph plus per
 
 **The problem:** AI coding agents see a few pages out of the book each session. They grep, read, and re-derive how the codebase fits together from scratch - no map of what calls what, no way to know what breaks when something changes, and no memory of decisions made in past sessions.
 
-**The solution:** RemembrallMCP gives the agent the whole codebase - a field-aware dependency graph (functions, classes, methods, **fields**, and the references between them) across 8 languages, plus persistent memory that survives between sessions.
+**The solution:** RemembrallMCP gives the agent the whole codebase - a field-aware dependency graph (functions, classes, methods, **fields**, and the references between them) across 9 languages, plus persistent memory that survives between sessions.
 
-**1. Field-Aware Code Graph** - A live map of your codebase built with tree-sitter. Functions, classes, methods, and data fields, plus call, import, defines, inherits, and field-reference relationships across 8 languages. Ask "what breaks if I change this?" - down to a single struct field - and get an answer in milliseconds, before the agent touches anything.
+**1. Field-Aware Code Graph** - A live map of your codebase built with tree-sitter. Functions, classes, methods, and data fields, plus call, import, defines, inherits, and field-reference relationships across 9 languages. Ask "what breaks if I change this?" - down to a single struct field - and get an answer in milliseconds, before the agent touches anything.
 
 **2. Persistent Memory** - Decisions, patterns, and organizational knowledge that survive between sessions. Hybrid semantic + full-text search finds relevant context instantly.
 
@@ -249,7 +249,7 @@ Restart your MCP client. All 9 tools will be available automatically.
 
 | Tool | Description |
 |------|-------------|
-| `remembrall_index` | Parse a project directory into a field-aware code graph (functions, classes, methods, and fields across 8 languages) |
+| `remembrall_index` | Parse a project directory into a field-aware code graph (functions, classes, methods, and fields across 9 languages) |
 | `remembrall_impact` | Blast radius analysis - "what breaks if I change this?" Works on functions, classes, methods, and fields |
 | `remembrall_lookup_symbol` | Find where a function, class, method, or field is defined across the project |
 
@@ -265,8 +265,9 @@ Restart your MCP client. All 9 tools will be available automatically.
 | Ruby | .rb | B (87.9) |
 | TypeScript | .ts, .tsx | B (84.3) |
 | Kotlin | .kt, .kts | B (82.9) |
+| C# | .cs | New |
 
-Scores measured against real open-source projects (Click, Gson, Axios, bat, Cobra, Sidekiq, Hono, Exposed) using automated ground truth tests.
+Scores measured against real open-source projects (Click, Gson, Axios, bat, Cobra, Sidekiq, Hono, Exposed) using automated ground truth tests. C# passes the field-capture ground truth (symbols, Defines, References, and impact analysis at 100%).
 
 ## Cold Start
 
@@ -297,7 +298,7 @@ Source Code                   Organizational Knowledge
     |                                 |
     v                                 v
 Tree-sitter Parsers           Ingestion Pipeline
-(8 languages)                 (GitHub PRs, Markdown docs)
+(9 languages)                 (GitHub PRs, Markdown docs)
     |                                 |
     v                                 v
 +--------------------------------------------------+
@@ -353,7 +354,7 @@ crates/
   remembrall-test-harness/  # Parser quality testing against ground truth
   remembrall-recall-test/   # Search quality testing
 docs/                       # Architecture and test plan docs
-test-fixtures/              # Ground truth TOML files for 8 languages
+test-fixtures/              # Ground truth TOML files for 9 languages
 tests/                      # Recall test fixtures
 ```
 

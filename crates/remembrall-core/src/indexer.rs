@@ -390,6 +390,7 @@ pub fn supported_extensions() -> &'static [&'static str] {
         "java", // Java
         "kt",   // Kotlin
         "kts",  // Kotlin script
+        "cs",   // C#
     ]
 }
 
@@ -404,6 +405,7 @@ fn language_for_extension(path: &Path) -> &'static str {
         "rb" => "ruby",
         "java" => "java",
         "kt" | "kts" => "kotlin",
+        "cs" => "csharp",
         _ => "unknown",
     }
 }
